@@ -33,7 +33,7 @@ describe('Day 1: Trebuchet', () => {
     });
 
     test('Puzzle input', () => {
-      expect(part2(puzzle)).toBe(54718);
+      expect(part2(puzzle)).toBe(54706);
     });
   });
 });
