@@ -14,29 +14,34 @@ const puzzle = loadFile(puzzlePath);
 describe('Day 3: Gear Ratios', () => {
   describe('Part 1', () => {
     test('Sample input', () => {
-      expect(part1(sample)).toBe(4361);
+      expect(part1(sample).total).toBe(4361);
     });
 
     test('Row ending with number', () => {
-      expect(part1(['*123'])).toBe(123);
-      expect(part1(['123'])).toBe(0);
-      expect(part1(['123*'])).toBe(123);
+      expect(part1(['*123']).total).toBe(123);
+      expect(part1(['123']).total).toBe(0);
+      expect(part1(['123*']).total).toBe(123);
     });
 
-    // test('Puzzle input', () => {
-    //   expect(part1(puzzle)).toBe(532331);
-    // });
+    test('Puzzle input', () => {
+      expect(part1(puzzle).total).toBe(532331);
+    });
   });
 
-  // describe('Part 2', () => {
-  //   test('Sample input', () => {
-  //     expect(part(sample)).toBe(467835);
-  //   });
-  // });
+  describe('Part 2', () => {
+    test('Sample input', () => {
+      expect(part1(sample).gearRatios).toBe(467835);
+    });
+
+    test('Puzzle input', () => {
+      expect(part1(puzzle).gearRatios).toBe(82301120);
+    });
+  });
 });
 
 function part1(input: string[]) {
   const starMap = new Map<string, number>();
+  const gearRatios: number[] = [];
   const grid = inputToGrid<string>(input);
   let total = 0;
   let isCapturing = false;
@@ -66,16 +71,24 @@ function part1(input: string[]) {
             total += capturedNumber;
 
             // part 2
-            const adjacentStars = captured.filter(([r, c]) => {
-              const adj = getAdjacents(grid, r, c);
-              return Object.values(adj).filter((a) => a.value === '*');
-            });
-            console.log('adjacentStars', adjacentStars);
+            for (const num of captured) {
+              const [row, col] = num;
+              const adj = getAdjacents(grid, row, col);
+              const stars = Object.values(adj).filter((a) => a.value === '*');
 
-            for (const star of adjacentStars) {
-              const key = star.join(',');
-              const current = starMap.get(key) ?? 1;
-              starMap.set(key, current * capturedNumber);
+              if (stars.length) {
+                const star = stars.pop();
+                const key = `${star?.row},${star?.col}`;
+
+                const starValue = starMap.get(key);
+                if (starValue) {
+                  gearRatios.push(starValue * capturedNumber);
+                } else {
+                  starMap.set(key, capturedNumber);
+                }
+
+                break;
+              }
             }
           }
 
@@ -85,24 +98,7 @@ function part1(input: string[]) {
     }
   }
 
-  console.log('starMap', starMap);
-
-  return total;
-}
-
-function checkAdjacent(grid: Grid<string>, row: number, col: number, validate: (cell: string) => boolean) {
-  const top = grid[row - 1]?.[col];
-  const bottom = grid[row + 1]?.[col];
-  const left = grid[row]?.[col - 1];
-  const right = grid[row]?.[col + 1];
-  const topLeft = grid[row - 1]?.[col - 1];
-  const topRight = grid[row - 1]?.[col + 1];
-  const bottomLeft = grid[row + 1]?.[col - 1];
-  const bottomRight = grid[row + 1]?.[col + 1];
-
-  return [top, bottom, left, right, topLeft, topRight, bottomLeft, bottomRight].some(
-    (cell) => cell !== '.' && validate(cell)
-  );
+  return { total, gearRatios: gearRatios.reduce((a, b) => a + b, 0) };
 }
 
 function getAdjacents(grid: Grid<string>, row: number, col: number) {
